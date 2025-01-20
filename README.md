@@ -1,5 +1,5 @@
 <h1 align="center" id="title">Nexon</h1>
-<img src="https://socialify.git.ci/Lucifer13072/Nexon/image?font=Inter&language=1&name=1&owner=1&pattern=Brick+Wall&theme=Dark" alt="Nexon" width="640" height="320" />
+<p align="center"><img src="https://socialify.git.ci/Lucifer13072/Nexon/image?font=Inter&amp;language=1&amp;name=1&amp;owner=1&amp;pattern=Brick+Wall&amp;theme=Dark" alt="project-image"></p>
 
 Nexon is a modern website engine built with powerful and flexible technologies like Go, HTML, CSS, and JavaScript. The project features a user-friendly admin panel and a functional main site designed for content management and user interaction.  
 
