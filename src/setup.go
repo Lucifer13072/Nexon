@@ -5,20 +5,13 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"html/template"
 	"log"
 	"net/http"
-
-	_ "github.com/go-sql-driver/mysql" // Драйвер для MySQL
 )
 
 var setupCompleted = false // Флаг установки
-
-// Хэширование пароля
-func hashPassword(password string) string {
-	hash := sha256.Sum256([]byte(password))
-	return hex.EncodeToString(hash[:])
-}
 
 // Подключение к базе данных и выполнение начальной настройки
 func setupDatabase(adminUsername, adminPassword, dbUser, dbPassword, dbName string) error {
@@ -37,7 +30,7 @@ func setupDatabase(adminUsername, adminPassword, dbUser, dbPassword, dbName stri
 	}
 
 	// Подключение к созданной базе данных
-	dsn = fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s", dbUser, dbPassword, dbName)
+	dsn = fmt.Sprintf("%s:%s@tcp(192.168.1.9:3306)/%s", dbUser, dbPassword, dbName)
 	db, err = sql.Open("mysql", dsn)
 	if err != nil {
 		return fmt.Errorf("не удалось подключиться к базе данных %s: %w", dbName, err)
@@ -82,7 +75,7 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodGet {
-		tmpl, err := template.ParseFiles("templates/setup.html")
+		tmpl, err := template.ParseFiles("templates/pages/setup.html")
 		if err != nil {
 			http.Error(w, "Не удалось загрузить шаблон", http.StatusInternalServerError)
 			return
@@ -107,7 +100,31 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Пометка, что установка завершена
 		setupCompleted = true
+
+		// Запись в базу данных флага завершенной установки
+		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s", dbUser, dbPassword, dbName))
+		if err != nil {
+			log.Println("Ошибка при подключении к базе данных для записи флага:", err)
+			http.Error(w, "Не удалось подключиться к базе данных для записи флага завершения", http.StatusInternalServerError)
+			return
+		}
+		defer db.Close()
+
+		// Вставка флага "setup_done" в таблицу settings
+		_, err = db.Exec("INSERT INTO settings (key_name, value) VALUES ('setup_done', 'true')")
+		if err != nil {
+			log.Println("Ошибка записи флага в базу данных:", err)
+			http.Error(w, "Не удалось записать флаг завершения настройки", http.StatusInternalServerError)
+			return
+		}
+
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
+}
+
+func hashPassword(password string) string {
+	hash := sha256.Sum256([]byte(password))
+	return hex.EncodeToString(hash[:])
 }

@@ -1,0 +1,74 @@
+.block-main {
+    padding: 100px 30px;
+    border-radius: 40px;
+    border: 5px solid #ffffff;  /* Добавлена ширина и стиль для рамки */
+    box-sizing: border-box;
+    mso-border-shadow: yes;
+    display: compact;
+}
+
+.logo {
+    max-width: 30%;
+    margin-left: 15%;
+}
+
+.logo-text {
+    color: azure;
+    font-size: 45px;
+    font-family: "Ebrima";
+    font-weight: 800;
+}
+
+.settings-text-big {
+    color: azure;
+    font-family: "Arial";
+    font-weight: 800;
+    text-align: center;
+    font-size: 25px;
+}
+
+.settings-text-medium {
+    color: azure;
+    font-family: "Arial";
+    font-weight: 900;
+    font-size: 20px;
+}
+
+.settings-text-small {
+    color: azure;
+    font-family: "Arial";
+    font-weight: 900;
+    font-size: 15px;
+}
+
+.input {
+    border: 2px solid;
+    border-radius: 10px;
+    border-color: #893d59;
+    color: azure;
+    background-color: #030013;
+    width: 100%;  /* Ширина инпута 100% от доступного пространства */
+    height: 30px;  /* Увеличен размер по высоте для удобства */
+    padding: 5px;  /* Добавлен отступ внутри инпута */
+    box-sizing: border-box;  /* Включаем padding и border в расчет ширины */
+}
+
+form {
+    width: 100%;  /* Убедимся, что форма занимает всю ширину контейнера */
+}
+
+label {
+    display: block;  /* Чтобы лейблы были на новой строке */
+    margin-bottom: 5px;  /* Добавлен отступ между лейблом и инпутом */
+}
+.button {
+    border-radius: 20px;
+    border: none;
+    display: inline-block;
+    font-size: 17px;
+    padding: 13px 28px;
+    font-size: 18px;
+    font-weight: 700;
+    color: azure;
+    background: linear-gradient(66deg, rgba(90,94,238,1) 0%, rgba(167,75,200,1) 29%, rgba(243,69,133,1) 68%, rgba(225,138,41,1) 100%);
+}

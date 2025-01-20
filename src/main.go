@@ -13,17 +13,21 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	// Обработчик для статики (например, CSS, изображения и т.д.)
+	mux.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("templates/pages/"))))
+
 	// Проверка первой настройки
 	mux.HandleFunc("/setup", setupHandler)
 
 	// Главная страница
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if !setupCompleted {
-			http.Redirect(w, r, "templates/pages/setup", http.StatusSeeOther)
+			http.Redirect(w, r, "/setup", http.StatusSeeOther)
 			return
 		}
 		w.Write([]byte("<h1>Добро пожаловать!</h1>"))
 	})
-	При этом давай еще файл setup.html и styles_setup.css будут удаляться после установки
+
+	// Запуск сервера
 	http.ListenAndServe(":"+port, mux)
 }
