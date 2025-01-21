@@ -1,4 +1,4 @@
-package main
+package scripts
 
 import (
 	"crypto/sha256"
@@ -9,14 +9,15 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 )
 
-var setupCompleted = false // Флаг установки
+var setupCompleted = setup_complete_read() // Флаг установки
 
 // Подключение к базе данных и выполнение начальной настройки
-func setupDatabase(adminUsername, adminPassword, dbUser, dbPassword, dbName string) error {
+func setupDatabase(adminUsername, adminPassword, dbIp, dbUser, dbPassword, dbName string) error {
 	// Подключение к MySQL
-	dsn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/", dbUser, dbPassword)
+	dsn := fmt.Sprintf("%s:%s@tcp("+dbIp+":3306)/", dbUser, dbPassword)
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return fmt.Errorf("не удалось подключиться к базе данных: %w", err)
@@ -38,8 +39,7 @@ func setupDatabase(adminUsername, adminPassword, dbUser, dbPassword, dbName stri
 	defer db.Close()
 
 	// Создание таблиц
-	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS users (
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
 		id INT AUTO_INCREMENT PRIMARY KEY,
 		username VARCHAR(50) NOT NULL UNIQUE,
 		password_hash VARCHAR(255) NOT NULL,
@@ -51,6 +51,13 @@ func setupDatabase(adminUsername, adminPassword, dbUser, dbPassword, dbName stri
 		key_name VARCHAR(50) NOT NULL UNIQUE,
 		value TEXT,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS news (
+		id INT AUTO_INCREMENT PRIMARY KEY,
+		title TEXT,
+		description TEXT,
+		date_news DATE
 	);
 	`)
 	if err != nil {
@@ -75,7 +82,7 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodGet {
-		tmpl, err := template.ParseFiles("templates/pages/setup.html")
+		tmpl, err := template.ParseFiles("templates/setup/setup.html")
 		if err != nil {
 			http.Error(w, "Не удалось загрузить шаблон", http.StatusInternalServerError)
 			return
@@ -88,12 +95,13 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 		// Получение данных из формы
 		adminUsername := r.FormValue("username")
 		adminPassword := r.FormValue("password")
+		dbIp := r.FormValue("db_ip")
 		dbUser := r.FormValue("db_user")
 		dbPassword := r.FormValue("db_password")
 		dbName := r.FormValue("db_name")
 
 		// Настройка базы данных
-		err := setupDatabase(adminUsername, adminPassword, dbUser, dbPassword, dbName)
+		err := setupDatabase(adminUsername, adminPassword, dbIp, dbUser, dbPassword, dbName)
 		if err != nil {
 			log.Println("Ошибка настройки базы данных:", err)
 			http.Error(w, "Не удалось выполнить настройку базы данных", http.StatusInternalServerError)
@@ -101,7 +109,7 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Пометка, что установка завершена
-		setupCompleted = true
+		setup_complete_write(true)
 
 		// Запись в базу данных флага завершенной установки
 		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s", dbUser, dbPassword, dbName))
@@ -120,6 +128,15 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Удаление папки setup
+		err = os.RemoveAll("setup")
+		if err != nil {
+			log.Println("Ошибка при удалении папки setup:", err)
+		} else {
+			log.Println("Папка setup успешно удалена.")
+		}
+
+		// Перенаправление на основной сайт
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
