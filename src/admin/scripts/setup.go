@@ -31,7 +31,7 @@ func setupDatabase(adminUsername, adminPassword, dbIp, dbUser, dbPassword, dbNam
 	}
 
 	// Подключение к созданной базе данных
-	dsn = fmt.Sprintf("%s:%s@tcp(192.168.1.9:3306)/%s", dbUser, dbPassword, dbName)
+	dsn = fmt.Sprintf("%s:%s@tcp("+dbIp+":3306)/%s", dbUser, dbPassword, dbName)
 	db, err = sql.Open("mysql", dsn)
 	if err != nil {
 		return fmt.Errorf("не удалось подключиться к базе данных %s: %w", dbName, err)
@@ -112,7 +112,7 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 		setup_complete_write(true)
 
 		// Запись в базу данных флага завершенной установки
-		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s", dbUser, dbPassword, dbName))
+		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp("+dbIp+":3306)/%s", dbUser, dbPassword, dbName))
 		if err != nil {
 			log.Println("Ошибка при подключении к базе данных для записи флага:", err)
 			http.Error(w, "Не удалось подключиться к базе данных для записи флага завершения", http.StatusInternalServerError)
@@ -129,7 +129,7 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Удаление папки setup
-		err = os.RemoveAll("setup")
+		err = os.RemoveAll("templates/setup")
 		if err != nil {
 			log.Println("Ошибка при удалении папки setup:", err)
 		} else {
