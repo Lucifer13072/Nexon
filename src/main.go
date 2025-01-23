@@ -1,8 +1,7 @@
 package main
 
 import (
-	"Nexon/admin/scripts"
-	a "Nexon/components/sqripts"
+	"Nexon/admin/adminScripts"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 )
 
 func main() {
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"
@@ -19,14 +19,14 @@ func main() {
 
 	// Обработчик для статики (например, CSS, изображения и т.д.)
 	mux.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("templates/setup/assets"))))
-
+	mux.Handle("/configs/", http.StripPrefix("/configs", http.FileServer(http.Dir("admin/adminScripts/configs"))))
 	// Проверка первой настройки
-	mux.HandleFunc("/setup", scripts.setupCompleted)
+	mux.HandleFunc("/setup", adminScripts.SetupHandler)
 
 	// Главная страница
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// Если настройка не завершена, перенаправляем на страницу настройки
-		if !scripts.setupCompleted {
+		if !adminScripts.SetupComleteRead() {
 			http.Redirect(w, r, "/setup", http.StatusSeeOther)
 			return
 		}
@@ -41,7 +41,7 @@ func main() {
 
 		// Обрабатываем контент с заменой тегов на реальные данные
 		pageContentStr := string(pageContent)
-		finalContent := a.RenderContent(pageContentStr)
+		finalContent := pageContentStr
 		// Отправляем отрендеренный контент пользователю
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write([]byte(finalContent))

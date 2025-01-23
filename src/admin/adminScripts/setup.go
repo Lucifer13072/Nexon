@@ -1,4 +1,4 @@
-package scripts
+package adminScripts
 
 import (
 	"crypto/sha256"
@@ -12,7 +12,7 @@ import (
 	"os"
 )
 
-var setupCompleted = setup_complete_read() // Флаг установки
+var setupCompleted = SetupComleteRead() // Флаг установки
 
 // Подключение к базе данных и выполнение начальной настройки
 func setupDatabase(adminUsername, adminPassword, dbIp, dbUser, dbPassword, dbName string) error {
@@ -40,33 +40,39 @@ func setupDatabase(adminUsername, adminPassword, dbIp, dbUser, dbPassword, dbNam
 
 	// Создание таблиц
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
-		id INT AUTO_INCREMENT PRIMARY KEY,
-		username VARCHAR(50) NOT NULL UNIQUE,
-		password_hash VARCHAR(255) NOT NULL,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-	);
-
-	CREATE TABLE IF NOT EXISTS settings (
-		id INT AUTO_INCREMENT PRIMARY KEY,
-		key_name VARCHAR(50) NOT NULL UNIQUE,
-		value TEXT,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-	);
-
-	CREATE TABLE IF NOT EXISTS news (
-		id INT AUTO_INCREMENT PRIMARY KEY,
-		title TEXT,
-		description TEXT,
-		date_news DATE
-	);
-	`)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    group_user INT
+);`)
 	if err != nil {
-		return fmt.Errorf("ошибка при создании таблиц: %w", err)
+		return fmt.Errorf("ошибка при создании таблицы users: %w", err)
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    keyName VARCHAR(50) NOT NULL UNIQUE,
+    value TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);`)
+	if err != nil {
+		return fmt.Errorf("ошибка при создании таблицы settings: %w", err)
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS news (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title TEXT,
+    description TEXT,
+    dateNews DATE
+);`)
+	if err != nil {
+		return fmt.Errorf("ошибка при создании таблицы news: %w", err)
 	}
 
 	// Добавление администратора
-	passwordHash := hashPassword(adminPassword)
-	_, err = db.Exec("INSERT INTO users (username, password_hash) VALUES (?, ?)", adminUsername, passwordHash)
+	passwordHash := HashPassword(adminPassword)
+	_, err = db.Exec("INSERT INTO users (username, password_hash, group_user) VALUES (?, ?, ?)", adminUsername, passwordHash, 0)
 	if err != nil {
 		return fmt.Errorf("ошибка при добавлении администратора: %w", err)
 	}
@@ -75,7 +81,7 @@ func setupDatabase(adminUsername, adminPassword, dbIp, dbUser, dbPassword, dbNam
 }
 
 // Обработчик установки
-func setupHandler(w http.ResponseWriter, r *http.Request) {
+func SetupHandler(w http.ResponseWriter, r *http.Request) {
 	if setupCompleted {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
@@ -109,39 +115,24 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Пометка, что установка завершена
-		setup_complete_write(true)
-
-		// Запись в базу данных флага завершенной установки
-		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp("+dbIp+":3306)/%s", dbUser, dbPassword, dbName))
-		if err != nil {
-			log.Println("Ошибка при подключении к базе данных для записи флага:", err)
-			http.Error(w, "Не удалось подключиться к базе данных для записи флага завершения", http.StatusInternalServerError)
-			return
-		}
-		defer db.Close()
-
-		// Вставка флага "setup_done" в таблицу settings
-		_, err = db.Exec("INSERT INTO settings (key_name, value) VALUES ('setup_done', 'true')")
-		if err != nil {
-			log.Println("Ошибка записи флага в базу данных:", err)
-			http.Error(w, "Не удалось записать флаг завершения настройки", http.StatusInternalServerError)
-			return
-		}
+		SetupComleteWrite(true)
 
 		// Удаление папки setup
-		err = os.RemoveAll("templates/setup")
+		err = os.RemoveAll("templates/test")
 		if err != nil {
 			log.Println("Ошибка при удалении папки setup:", err)
 		} else {
 			log.Println("Папка setup успешно удалена.")
 		}
 
+		DatabaseSettingsWriter(dbIp, dbUser, dbPassword, dbName)
+
 		// Перенаправление на основной сайт
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 
-func hashPassword(password string) string {
+func HashPassword(password string) string {
 	hash := sha256.Sum256([]byte(password))
 	return hex.EncodeToString(hash[:])
 }

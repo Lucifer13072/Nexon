@@ -1,0 +1,6 @@
+setupComplet: false
+database:
+    ip: ""
+    user: ""
+    password: ""
+    Base: ""
