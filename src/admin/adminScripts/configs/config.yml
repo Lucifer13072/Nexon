@@ -1,4 +1,4 @@
-setupComplet: false
+setup_complet: false
 database:
     ip: ""
     user: ""

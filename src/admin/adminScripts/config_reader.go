@@ -13,7 +13,7 @@ type Database struct {
 }
 
 type Confing struct {
-	SetupComplet string   `yaml:"setupComplet"`
+	SetupComplet string   `yaml:"setup_complet"`
 	Database     Database `yaml:"database"`
 }
 
@@ -44,10 +44,12 @@ func SetupComleteWrite(marp bool) {
 		marp_bool = "false"
 	}
 
+	// Создаем структуру с новым значением
 	conf := Confing{
 		SetupComplet: marp_bool,
 	}
 
+	// Сериализуем структуру в YAML
 	yamlFile, err := yaml.Marshal(&conf)
 	if err != nil {
 		panic(err)

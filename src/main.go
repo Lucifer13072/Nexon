@@ -47,6 +47,29 @@ func main() {
 		w.Write([]byte(finalContent))
 	})
 
+	// Авторизация в админ панель
+	mux.HandleFunc("/admin/login", adminScripts.AdminLoginHandler)
+
+	// Админ панель (доступ только для авторизованных пользователей)
+	mux.HandleFunc("/admin/index", func(w http.ResponseWriter, r *http.Request) {
+		// Проверка авторизации с использованием куки
+		if !adminScripts.IsUserAuthenticated(r) {
+			http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
+			return
+		}
+
+		// Загружаем страницу админ панели
+		pageContent, err := ioutil.ReadFile("admin/front/dashboard.html")
+		if err != nil {
+			http.Error(w, "Не удалось загрузить страницу админ панели", http.StatusInternalServerError)
+			log.Printf("Ошибка чтения файла: %v", err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(pageContent)
+	})
+
 	// Запуск сервера
 	http.ListenAndServe(":"+port, mux)
 }

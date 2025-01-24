@@ -70,6 +70,17 @@ func setupDatabase(adminUsername, adminPassword, dbIp, dbUser, dbPassword, dbNam
 		return fmt.Errorf("ошибка при создании таблицы news: %w", err)
 	}
 
+	_, err = db.Exec(`CREATE TABLE user_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    expiration DATETIME NOT NULL
+);`)
+
+	if err != nil {
+		return fmt.Errorf("ошибка при создании таблицы user_sessions: %w", err)
+	}
+
 	// Добавление администратора
 	passwordHash := HashPassword(adminPassword)
 	_, err = db.Exec("INSERT INTO users (username, password_hash, group_user) VALUES (?, ?, ?)", adminUsername, passwordHash, 0)
