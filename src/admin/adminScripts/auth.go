@@ -11,7 +11,6 @@ import (
 )
 
 // Проверка аутентификации
-// Проверка аутентификации
 func AdminLoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		// Проверка куки на авторизацию
