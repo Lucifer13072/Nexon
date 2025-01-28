@@ -20,6 +20,8 @@ func main() {
 	// Обработчик для статики (например, CSS, изображения и т.д.)
 	mux.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("templates/setup/assets"))))
 	mux.Handle("/configs/", http.StripPrefix("/configs", http.FileServer(http.Dir("admin/adminScripts/configs"))))
+	mux.Handle("/javascript/", http.StripPrefix("/javascript", http.FileServer(http.Dir("admin/assets/javascript"))))
+	mux.Handle("/templ/", http.StripPrefix("/templ", http.FileServer(http.Dir("admin/front/templ"))))
 	// Проверка первой настройки
 	mux.HandleFunc("/setup", adminScripts.SetupHandler)
 

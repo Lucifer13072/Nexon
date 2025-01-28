@@ -36,17 +36,11 @@ func SetupComleteRead() bool {
 	}
 }
 
-func SetupComleteWrite(marp bool) {
-	var marp_bool string
-	if marp {
-		marp_bool = "true"
-	} else {
-		marp_bool = "false"
-	}
+func SetupComleteWrite() {
 
 	// Создаем структуру с новым значением
 	conf := Confing{
-		SetupComplet: marp_bool,
+		SetupComplet: "true",
 	}
 
 	// Сериализуем структуру в YAML

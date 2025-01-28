@@ -126,7 +126,7 @@ func SetupHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Пометка, что установка завершена
-		SetupComleteWrite(true)
+		SetupComleteWrite()
 
 		// Удаление папки setup
 		err = os.RemoveAll("templates/test")
